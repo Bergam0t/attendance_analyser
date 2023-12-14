@@ -12,4 +12,4 @@ The app will process the file to generate graphs and summary metrics.
 
 Deployed as a serverless on github pages using the stlite package, so all processing will take place in the browser.
 
-Inspired by the work done by the strategy unit in [this repository](https://github.com/The-Strategy-Unit/WebinarStats)
+Concept inspired by the work done by the strategy unit in [this repository](https://github.com/The-Strategy-Unit/WebinarStats)
