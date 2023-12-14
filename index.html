@@ -28,6 +28,7 @@ import plotly.express as px
 import pandas as pd
 from datetime import datetime, timedelta
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 from st_aggrid import AgGrid
 
@@ -159,21 +160,77 @@ if uploaded_file is not None:
         st.metric(label="Total Duration of Attendance",
                 value = total_duration)
 
+    with st.expander("Click here to add an overlay showing sections of your meeting:"):
+        session_df = pd.DataFrame([{#"id":i, 
+                                    "Start": "", 
+                                    "End":"", 
+                                    "Label":""} for i in range(10)])
+        st.markdown("""
+                    Enter Times in the format HH:MM
+                    
+                    e.g. 09:00, 10:30, 11:00
+                    """)
+
+        editable_df = st.data_editor(session_df)
+
 
     attendee_history_fig = px.line(concurrent_attendees_count_df, 
                                 x="time", y="attendee_count",
+                                height=800,
                                 title=f"Concurrent Attendees Over Time: {uploaded_file.name}")
+    
+    colours = ["aliceblue", "goldenrod", 
+               "fuchsia", "dimgrey", 
+               "mediumorchid", "mediumvioletred", 
+               "mediumaquamarine", "maroon",
+               "wheat", "tomato"]
+
+    for index, row in editable_df.iterrows():
+
+        if ((row["Start"] != "") and (row["End"] != "") and (row["Start"] is not None) and (row["End"] is not None)):
+            d1 = datetime.strptime(datetime.strftime(start, "%Y-%m-%d") + " " + row["Start"], "%Y-%m-%d %H:%M")
+            d2 = datetime.strptime(datetime.strftime(start, "%Y-%m-%d") + " " +row["End"], "%Y-%m-%d %H:%M")
+
+            attendee_history_fig.add_shape(
+                type="rect",
+                opacity=0.3,
+                line=dict(
+                    color="LightSeaGreen",
+                    width=2,
+                ),
+                fillcolor=colours[index],
+                x0=d1, 
+                x1=d2,
+                y0=maximum_simultaneous_attendees+5,
+                y1=maximum_simultaneous_attendees+25
+                )
+            
+            attendee_history_fig.add_trace(go.Scatter(
+                x=[d1 + (d2-d1) /2],
+                y=[maximum_simultaneous_attendees+15],
+                text=[row['Label']],
+                mode="text",
+            ))
+                        
 
     attendee_history_fig.update_yaxes(
         tick0=0, dtick=10,
-        range=[0, concurrent_attendees_count_df['attendee_count'].max()+10]
+        range=[0, concurrent_attendees_count_df['attendee_count'].max()+30]
         )
 
     attendee_history_fig.update_layout(yaxis_title="Attendees present", 
-                                   xaxis_title="Time")
+                                   xaxis_title="Time", showlegend=False)
 
     st.plotly_chart(attendee_history_fig,
                     use_container_width=True)
+
+
+    st.download_button(
+                label="Download Plot as Interactive File",
+                data=attendee_history_fig.to_html(full_html=False, include_plotlyjs="cdn"),
+                file_name="attendee_history_plot.html",
+                mime="text/html"
+            )
 
     # st.select("Search for an attendee", )
 
