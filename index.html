@@ -19,7 +19,7 @@
     <script>
       stlite.mount(
   {
-    requirements: ["pandas", "plotly", "streamlit-aggrid"],
+    requirements: ["pandas", "plotly"],
     entrypoint: "App.py",
     files: {
         "App.py": `
@@ -30,7 +30,6 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-from st_aggrid import AgGrid
 
 st.set_page_config(
      page_title="Zoom Log Analyser",
@@ -248,10 +247,10 @@ if uploaded_file is not None:
         )
 
     with st.expander("Click here to view the length of time each person spent in the meeting"):
-        AgGrid(guests_duration.sort_values("totalduration", ascending=False).reset_index(drop=False))
+        st.dataframe(guests_duration.sort_values("totalduration", ascending=False).reset_index(drop=False), hide_index=True)
 
     with st.expander("Click here to view the full log"):
-        AgGrid(attendance_log)
+        st.dataframe(attendance_log, hide_index=True)
 
 
     # View attendance breakdown for a single person
