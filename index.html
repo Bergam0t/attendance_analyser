@@ -60,7 +60,7 @@ if uploaded_file is not None:
     attendance_log.columns = [x.lower() for x in attendance_log.columns]
 
     attendance_log["duration (minutes)"] = attendance_log["duration (minutes)"].astype(int) 
-    attendance_log["join time"] = pd.to_datetime(attendance_log["Join Time"])
+    attendance_log["join time"] = pd.to_datetime(attendance_log["join time"])
     attendance_log["leave time"] = pd.to_datetime(attendance_log["leave time"])
 
     attendance_log = attendance_log[attendance_log["in waiting room"] == "No"]
