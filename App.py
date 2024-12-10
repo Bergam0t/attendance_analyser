@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-from st_aggrid import AgGrid
 
 st.set_page_config(
      page_title="Zoom Log Analyser",
@@ -32,37 +31,38 @@ uploaded_file = st.file_uploader("Upload a Zoom Attendance Log", accept_multiple
 if uploaded_file is not None:
 
     attendance_log = pd.read_csv(uploaded_file)
+    attendance_log.columns = [x.lower() for x in attendance_log.columns]
 
-    attendance_log["Duration (Minutes)"] = attendance_log["Duration (Minutes)"].astype(int) 
-    attendance_log["Join Time"] = pd.to_datetime(attendance_log["Join Time"])
-    attendance_log["Leave Time"] = pd.to_datetime(attendance_log["Leave Time"])
+    attendance_log["duration (minutes)"] = attendance_log["duration (minutes)"].astype(int) 
+    attendance_log["join time"] = pd.to_datetime(attendance_log["join time"])
+    attendance_log["leave time"] = pd.to_datetime(attendance_log["leave time"])
 
-    attendance_log = attendance_log[attendance_log["In Waiting Room"] == "No"]
+    attendance_log = attendance_log[attendance_log["in waiting room"] == "No"]
 
-    total_duration_minutes = attendance_log["Duration (Minutes)"].sum()
+    total_duration_minutes = attendance_log["duration (minutes)"].sum()
 
     total_duration_hours = (total_duration_minutes / 60).round(2)
 
-    distinct_attendees = len(attendance_log.drop_duplicates("Name (Original Name)"))
+    distinct_attendees = len(attendance_log.drop_duplicates("name (original name)"))
 
-    distinct_attendees_guests = len(attendance_log[attendance_log["Guest"] == "Yes"]
-                                    .drop_duplicates("Name (Original Name)")
+    distinct_attendees_guests = len(attendance_log[attendance_log["guest"] == "Yes"]
+                                    .drop_duplicates("name (original name)")
                                     )
 
-    guests = attendance_log[attendance_log["Guest"] == "Yes"] \
-            .drop_duplicates("Name (Original Name)") \
-            .sort_values("Name (Original Name)")["Name (Original Name)"] \
+    guests = attendance_log[attendance_log["guest"] == "Yes"] \
+            .drop_duplicates("name (original name)") \
+            .sort_values("name (original name)")["name (original name)"] \
             .tolist()
 
 
-    guests_duration = (attendance_log[attendance_log["Guest"] == "Yes"] \
-                    .sort_values("Name (Original Name)") \
-                    .groupby("Name (Original Name)"))["Duration (Minutes)"].agg(TotalDuration='sum')
+    guests_duration = (attendance_log[attendance_log["guest"] == "Yes"] \
+                    .sort_values("name (original name)") \
+                    .groupby("name (original name)"))["duration (minutes)"].agg(totalduration='sum')
 
-    guests_duration.sort_values("TotalDuration")
+    guests_duration.sort_values("totalduration")
 
-    start = attendance_log["Join Time"].min()
-    end =  attendance_log["Leave Time"].max()
+    start = attendance_log["join time"].min()
+    end =  attendance_log["leave time"].max()
 
     i = pd.date_range(start.replace(second=0, microsecond=0),
                     end.replace(second=0, microsecond=0) + timedelta(minutes=1),
@@ -73,8 +73,8 @@ if uploaded_file is not None:
     for minute in i:
         interval_census_list.append(
             {"time": minute,
-            "attendee_count": len(attendance_log[(attendance_log["Join Time"] <= minute) &
-                                                (attendance_log["Leave Time"] >= minute)]
+            "attendee_count": len(attendance_log[(attendance_log["join time"] <= minute) &
+                                                (attendance_log["leave time"] >= minute)]
                                                 )})
 
     concurrent_attendees_count_df = pd.DataFrame.from_dict(interval_census_list)
@@ -101,7 +101,7 @@ if uploaded_file is not None:
     col4, col5, col6 = st.columns(3)
 
     with col4:
-        mean_duration = np.mean(guests_duration['TotalDuration'])
+        mean_duration = np.mean(guests_duration['totalduration'])
         if mean_duration > 60:
             hours = int(mean_duration // 60)
             minutes = int(np.floor(mean_duration % 60))
@@ -113,7 +113,7 @@ if uploaded_file is not None:
                   value = mean_duration)
         
     with col5:
-        median_duration = np.median(guests_duration['TotalDuration'])
+        median_duration = np.median(guests_duration['totalduration'])
         if median_duration > 60:
             hours = int(median_duration // 60)
             minutes = int(np.floor(median_duration % 60))
@@ -125,7 +125,7 @@ if uploaded_file is not None:
                   value = median_duration)
 
     with col6:
-        total_duration = sum(guests_duration['TotalDuration'])
+        total_duration = sum(guests_duration['totalduration'])
         if total_duration > 60:
             hours = int(total_duration // 60)
             minutes = int(np.floor(total_duration % 60))
@@ -210,7 +210,7 @@ if uploaded_file is not None:
     # st.select("Search for an attendee", )
 
 
-    duration_distribution_fig = px.histogram(guests_duration, x="TotalDuration",
+    duration_distribution_fig = px.histogram(guests_duration, x="totalduration",
                                 title=f"Distribution of Total Attendance Time: {uploaded_file.name}")
 
     duration_distribution_fig.update_layout(yaxis_title="Number of Attendees in Time Category", 
@@ -222,10 +222,10 @@ if uploaded_file is not None:
         )
 
     with st.expander("Click here to view the length of time each person spent in the meeting"):
-        AgGrid(guests_duration.sort_values("TotalDuration", ascending=False).reset_index(drop=False))
+        st.dataframe(guests_duration.sort_values("totalduration", ascending=False).reset_index(drop=False), hide_index=True)
 
     with st.expander("Click here to view the full log"):
-        AgGrid(attendance_log)
+        st.dataframe(attendance_log, hide_index=True)
 
 
     # View attendance breakdown for a single person
@@ -233,11 +233,11 @@ if uploaded_file is not None:
                  options=guests
               )
     
-    filtered_attendance_log = attendance_log[attendance_log["Name (Original Name)"] == selected_attendee]
+    filtered_attendance_log = attendance_log[attendance_log["name (original name)"] == selected_attendee]
 
     if len(filtered_attendance_log) > 0:
-        filtered_attendance_log["Join Time"] = pd.to_datetime(filtered_attendance_log["Join Time"])
-        filtered_attendance_log["Leave Time"] = pd.to_datetime(filtered_attendance_log["Leave Time"])
+        filtered_attendance_log["join time"] = pd.to_datetime(filtered_attendance_log["join time"])
+        filtered_attendance_log["leave time"] = pd.to_datetime(filtered_attendance_log["leave time"])
 
         filtered_interval_census_list = []
 
@@ -248,8 +248,8 @@ if uploaded_file is not None:
         for minute in i:
             filtered_interval_census_list.append(
                 {"time": minute,
-                "attendee_count": len(filtered_attendance_log[(filtered_attendance_log["Join Time"] <= minute) &
-                                                    (filtered_attendance_log["Leave Time"] >= minute)]
+                "attendee_count": len(filtered_attendance_log[(filtered_attendance_log["join time"] <= minute) &
+                                                    (filtered_attendance_log["leave time"] >= minute)]
                                                     )})
 
         filtered_concurrent_attendees_count_df = pd.DataFrame.from_dict(filtered_interval_census_list)    
