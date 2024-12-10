@@ -236,7 +236,7 @@ if uploaded_file is not None:
     # st.select("Search for an attendee", )
 
 
-    duration_distribution_fig = px.histogram(guests_duration, x="TotalDuration",
+    duration_distribution_fig = px.histogram(guests_duration, x="totalduration",
                                 title=f"Distribution of Total Attendance Time: {uploaded_file.name}")
 
     duration_distribution_fig.update_layout(yaxis_title="Number of Attendees in Time Category", 
