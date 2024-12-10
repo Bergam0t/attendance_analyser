@@ -71,7 +71,7 @@ if uploaded_file is not None:
 
     distinct_attendees = len(attendance_log.drop_duplicates("name (original name)"))
 
-    distinct_attendees_guests = len(attendance_log[attendance_log["Guest"] == "Yes"]
+    distinct_attendees_guests = len(attendance_log[attendance_log["guest"] == "Yes"]
                                     .drop_duplicates("name (original name)")
                                     )
 
