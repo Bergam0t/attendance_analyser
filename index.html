@@ -248,7 +248,7 @@ if uploaded_file is not None:
         )
 
     with st.expander("Click here to view the length of time each person spent in the meeting"):
-        AgGrid(guests_duration.sort_values("TotalDuration", ascending=False).reset_index(drop=False))
+        AgGrid(guests_duration.sort_values("totalduration", ascending=False).reset_index(drop=False))
 
     with st.expander("Click here to view the full log"):
         AgGrid(attendance_log)
